@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <style type="text/css">
+        .list-group {
+            max-height: 300px;
+            margin-bottom: 10px;
+            overflow:scroll;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+    <title>WebSocket簡易UI</title>
+</head>
+<body>
+    <div class="container mt-3">
+        <h1>WebSocket簡易UI</h1>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="WebSocket URL" id="websocket">
+            <button class="btn btn-outline-secondary" type="button" id="connect">Connect</button>
+            <button class="btn btn-outline-secondary d-none" type="button" id="connecting">Connecting...</button>
+            <button class="btn btn-outline-dark d-none" type="button" id="disconnect">Disconnect</button>
+        </div>
+
+        <div class="input-group">
+            <textarea class="form-control js-disable" rows="10" placeholder="JSON形式で入力してください" id="sendField" disabled></textarea>
+        </div>
+        <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-primary js-disable" type="button" id="sendBtn" disabled>送信</button>
+        </div>
+
+        <ul class="list-group list-group-flush mt-3" id="messageList"></ul>
+    </div>
+
+    <script type="text/javascript">
+        var connect = document.getElementById("connect");
+        var connecting = document.getElementById("connecting");
+        var disconnect = document.getElementById("disconnect");
+        var disableClass = document.getElementsByClassName("js-disable");
+        var messageList = document.getElementById("messageList");
+        var sendField = document.getElementById("sendField");
+        var sendBtn = document.getElementById("sendBtn");
+        var ws = null;
+        connect.addEventListener("click", function () {
+            this.classList.add("d-none")
+            connecting.classList.remove("d-none");
+            var websocketURL = document.getElementById('websocket').value;
+            try {
+                ws = new window.WebSocket(websocketURL);
+            } catch (e) {
+                alert("接続できませんでした。WebSocket URLが正しいか確認してください。")
+                console.log(e);
+                connecting.classList.add("d-none");
+                this.classList.remove("d-none")
+                return false;
+            }
+            open()
+            onMessage();
+        })
+
+        disconnect.addEventListener("click", function () {
+            close();
+            this.classList.add("d-none");
+            connect.classList.remove("d-none");
+            for (var i = 0; i < disableClass.length ; i++){
+                disableClass[i].disabled = true;
+            }
+            while (messageList.firstChild) {
+                messageList.removeChild(messageList.lastChild);
+            }
+        })
+
+        sendBtn.addEventListener("click", function () {
+            if (! sendField.value) {
+                alert("送信データを入力してください。")
+            }
+
+            try {
+                JSON.parse(sendField.value);
+            } catch (e) {
+                alert("送信データをJSON形式で入力してください。")
+                return false;
+            }
+
+            send(sendField.value);
+        });
+
+        function open() {
+            if (ws) {
+                ws.addEventListener("open", function () {
+                    connecting.classList.add("d-none");
+                    disconnect.classList.remove("d-none");
+                    for (var i = 0; i < disableClass.length ; i++){
+                        disableClass[i].disabled = false;
+                    }
+                })
+            }
+        }
+
+        function onMessage () {
+            if (ws) {
+                ws.onmessage = function(e) {
+                    messageList.insertAdjacentHTML('afterbegin', '<li class="list-group-item"><pre>' + JSON.stringify(JSON.parse(e.data), null, 4) + '</pre></li>');
+                    var elements = messageList.getElementsByTagName('li');
+                    if (elements.length > 100) {
+                        messageList.removeChild(elements[100])
+                    }
+                }
+            }
+        }
+
+        function send (message) {
+            if (ws) {
+                ws.send(message)
+            }
+        }
+
+        function close () {
+            if (ws) {
+                ws.close()
+            }
+        }
+    </script>
+</body>
+</html>
