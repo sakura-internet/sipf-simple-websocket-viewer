@@ -104,4 +104,4 @@ payload[].valueに型式に合わない値を指定している
 
 [さくらのモノプラットフォームとは](https://manual.sakura.ad.jp/cloud/iotpf/about.html)
 
-[データフォーマット](https://manual.sakura.ad.jp/cloud/iotpf/data-format-beta.html)
+[データフォーマット](https://manual.sakura.ad.jp/cloud/iotpf/service-adapter/data-format.html)
